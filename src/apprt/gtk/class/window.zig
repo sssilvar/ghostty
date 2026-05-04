@@ -249,6 +249,9 @@ pub const Window = extern struct {
         /// For now, this logic is more similar to our legacy GTK side.
         surface_init: bool = false,
 
+        /// True once the configured initial window state has been applied.
+        initial_window_state_applied: bool = false,
+
         /// See tabOverviewOpen for why we have this.
         tab_overview_focus_timer: ?c_uint = null,
 
@@ -327,10 +330,6 @@ pub const Window = extern struct {
 
         // Initialize our actions
         self.initActionMap();
-
-        // Start states based on config.
-        if (config.maximize) self.as(gtk.Window).maximize();
-        if (config.fullscreen != .false) self.as(gtk.Window).fullscreen();
 
         // If we have an explicit title set, we set that immediately
         // so that any applications inspecting the window states see
@@ -615,6 +614,22 @@ pub const Window = extern struct {
     pub fn toggleVisibility(self: *Self) void {
         const widget = self.as(gtk.Widget);
         widget.setVisible(@intFromBool(widget.isVisible() == 0));
+    }
+
+    /// Apply start states from config after the window is presented.
+    ///
+    /// Some window managers, notably GNOME Shell on X11, ignore maximize and
+    /// fullscreen requests made before the toplevel has been presented.
+    pub fn applyInitialWindowState(self: *Self) void {
+        const priv = self.private();
+        if (priv.initial_window_state_applied) return;
+        priv.initial_window_state_applied = true;
+
+        const config_obj = priv.config orelse return;
+        const config = config_obj.get();
+
+        if (config.maximize) self.as(gtk.Window).maximize();
+        if (config.fullscreen != .false) self.as(gtk.Window).fullscreen();
     }
 
     /// Updates various appearance properties. This should always be safe

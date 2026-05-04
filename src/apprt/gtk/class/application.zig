@@ -2326,6 +2326,7 @@ const Action = struct {
 
         // Show the window
         gtk.Window.present(win.as(gtk.Window));
+        win.applyInitialWindowState();
     }
 
     pub fn openConfig(self: *Application) bool {
