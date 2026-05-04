@@ -509,13 +509,11 @@ pub fn init(b: *std.Build, appVersion: []const u8, libVersion: []const u8) !Conf
             _ = b.systemIntegrationOption(dep, .{ .default = false });
         }
 
-        // These are dynamic libraries we default to true, preferring
-        // to use system packages over building and installing libs
-        // as they require additional ldconfig of library paths or
-        // patching the rpath of the program to discover the dynamic library
-        // at runtime
+        // This is dynamically linked even when built from source, but
+        // availability lags in common distros such as Ubuntu 24.04. Default
+        // to the vendored build so default source builds work there.
         for (&[_][]const u8{"gtk4-layer-shell"}) |dep| {
-            _ = b.systemIntegrationOption(dep, .{ .default = true });
+            _ = b.systemIntegrationOption(dep, .{ .default = false });
         }
     }
 

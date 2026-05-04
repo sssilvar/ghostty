@@ -739,6 +739,9 @@ fn addGtkNg(
                 const shared_lib = gtk4_layer_shell.artifact("gtk4-layer-shell");
                 b.installArtifact(shared_lib);
                 step.linkLibrary(shared_lib);
+                if (target.result.os.tag == .linux) {
+                    step.root_module.addRPathSpecial("$ORIGIN/../lib");
+                }
             }
         }
 
