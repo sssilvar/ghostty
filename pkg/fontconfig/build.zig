@@ -126,6 +126,18 @@ fn buildLib(b: *std.Build, module: *std.Build.Module, options: anytype) !*std.Bu
         // https://gitlab.freedesktop.org/fontconfig/fontconfig/-/merge_requests/231
         "-fno-sanitize=undefined",
         "-fno-sanitize-trap=undefined",
+
+        // Hide all symbols. We statically link fontconfig into the ghostty
+        // executable, but GTK pulls in the *system* libfontconfig (via
+        // pango/cairo). Because fontconfig's public API (FcPublic) is an empty
+        // macro, every public function compiles with default visibility and
+        // lands in the executable's .dynsym. The dynamic linker then makes the
+        // system libfontconfig's references (from pango on another thread)
+        // bind to *our* vendored copy, so two fontconfig instances share one
+        // global FcConfig/cache state. That corruption segfaults in FcCompare
+        // during fallback font sorting. Hiding our symbols keeps pango on the
+        // system copy; our own Zig calls still resolve via static linking.
+        "-fvisibility=hidden",
     });
 
     switch (target.result.ptrBitWidth()) {

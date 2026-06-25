@@ -85,6 +85,15 @@ fn buildLib(b: *std.Build, module: *std.Build.Module, options: anytype) !*std.Bu
         "-DFT_CONFIG_OPTION_SYSTEM_ZLIB=1",
 
         "-fno-sanitize=undefined",
+
+        // Hide internal symbols so our statically-linked freetype interposes
+        // the system libfreetype (loaded by GTK via pangoft2) as little as
+        // possible. See the longer explanation in pkg/fontconfig/build.zig.
+        // NOTE: this does NOT hide the public FT_* API: freetype's FT_EXPORT
+        // macro forces visibility("default") (config/public-macros.h), which
+        // overrides this flag. Fully hiding those needs a linker-level
+        // --exclude-libs at the executable link in src/build/.
+        "-fvisibility=hidden",
     });
     if (target.result.os.tag != .windows) {
         try flags.appendSlice(b.allocator, &.{

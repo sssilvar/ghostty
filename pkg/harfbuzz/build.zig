@@ -122,6 +122,11 @@ fn buildLib(b: *std.Build, module: *std.Build.Module, options: anytype) !*std.Bu
     defer flags.deinit(b.allocator);
     try flags.appendSlice(b.allocator, &.{
         "-DHAVE_STDBOOL_H",
+
+        // Hide symbols so our statically-linked harfbuzz does not interpose
+        // the system libharfbuzz that GTK loads via pango. See the longer
+        // explanation in pkg/fontconfig/build.zig.
+        "-fvisibility=hidden",
     });
     // Disable ubsan for MSVC: Zig's ubsan runtime cannot be bundled
     // on Windows (LNK4229), leaving __ubsan_handle_* unresolved when
