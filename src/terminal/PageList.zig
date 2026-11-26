@@ -25,14 +25,6 @@ const Row = pagepkg.Row;
 
 const log = std.log.scoped(.page_list);
 
-/// The number of PageList.Nodes we preheat the pool with. A node is
-/// a very small struct so we can afford to preheat many, but the exact
-/// number is uncertain. Any number too large is wasting memory, any number
-/// too small will cause the pool to have to allocate more memory later.
-/// This should be set to some reasonable minimum that we expect a terminal
-/// window to scroll into quickly.
-const page_preheat = 4;
-
 /// The list of pages in the screen. These are expected to be in order
 /// where the first page is the topmost page (scrollback) and the last is
 /// the bottommost page (the current active page).
@@ -82,14 +74,19 @@ pub const MemoryPool = struct {
 
     pub const ResetMode = std.heap.ArenaAllocator.ResetMode;
 
-    pub fn init(
+    pub fn init(gen_alloc: Allocator, page_alloc: Allocator, preheat: usize) Allocator.Error!MemoryPool {
+        return initPreheated(gen_alloc, page_alloc, preheat, preheat);
+    }
+
+    fn initPreheated(
         gen_alloc: Allocator,
         page_alloc: Allocator,
-        preheat: usize,
+        node_count: usize,
+        page_count: usize,
     ) Allocator.Error!MemoryPool {
-        var node_pool = try NodePool.initPreheated(gen_alloc, preheat);
+        var node_pool = try NodePool.initPreheated(gen_alloc, node_count);
         errdefer node_pool.deinit();
-        var page_pool = try PagePool.initPreheated(page_alloc, preheat);
+        var page_pool = try PagePool.initPreheated(page_alloc, page_count);
         errdefer page_pool.deinit();
         var pin_pool = try PinPool.initPreheated(gen_alloc, 8);
         errdefer pin_pool.deinit();
@@ -367,11 +364,8 @@ pub fn init(
     // and we'll split it thereafter if it gets too large and add more as
     // necessary.
     try tw.check(.init_memory_pool);
-    var pool = try MemoryPool.init(
-        alloc,
-        pageAllocator(),
-        page_preheat,
-    );
+    // Reserve inexpensive nodes, but let scrollback grow the full-sized page pool on demand.
+    var pool = try MemoryPool.initPreheated(alloc, pageAllocator(), 4, 1);
     errdefer pool.deinit();
 
     try tw.check(.init_pages);
