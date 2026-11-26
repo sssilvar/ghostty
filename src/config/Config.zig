@@ -3729,11 +3729,9 @@ term: []const u8 = "xterm-ghostty",
 
 /// Configures the low-level API to use for async IO, eventing, etc.
 ///
-/// Most users should leave this set to `auto`. This will automatically detect
-/// scenarios where APIs may not be available (for example `io_uring` on
-/// certain hardened kernels) and fall back to a different API. However, if
-/// you want to force a specific backend for any reason, you can set this
-/// here.
+/// This fork defaults to `epoll` on Linux because idle `io_uring` waits can
+/// count as I/O pressure even when no disk work is pending. Use `auto` to
+/// restore automatic backend detection.
 ///
 /// Based on various benchmarks, we haven't found a statistically significant
 /// difference between the backends with regards to memory, CPU, or latency.
@@ -3755,7 +3753,7 @@ term: []const u8 = "xterm-ghostty",
 /// where we have multiple options. On macOS, we always use `kqueue`.
 ///
 /// Available since: 1.2.0
-@"async-backend": AsyncBackend = .auto,
+@"async-backend": AsyncBackend = if (builtin.os.tag == .linux) .epoll else .auto,
 
 /// Control the auto-update functionality of Ghostty. This is only supported
 /// on macOS currently, since Linux builds are distributed via package
