@@ -2895,9 +2895,8 @@ pub const Surface = extern struct {
         // It's better to do this here rather than within the core callback
         // since we have direct access to the underlying gdk.Event here.
         if (!consumed and button == .left and !surface.hasSelection()) {
-            if (!self.showOnScreenKeyboard(event)) {
-                log.warn("failed to activate the on-screen keyboard", .{});
-            }
+            // IM contexts without an on-screen keyboard normally decline this request.
+            _ = self.showOnScreenKeyboard(event);
         }
     }
 
