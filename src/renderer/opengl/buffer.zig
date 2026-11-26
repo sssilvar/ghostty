@@ -116,6 +116,7 @@ pub fn Buffer(comptime T: type) type {
             var i: usize = 0;
 
             for (lists) |list| {
+                if (list.items.len == 0) continue;
                 try binding.setSubData(i, list.items);
                 i += list.items.len * @sizeOf(T);
             }
