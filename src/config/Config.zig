@@ -2830,18 +2830,16 @@ keybind: Keybinds = .{},
 ///
 ///   * `title` - Set the window title via shell integration.
 ///
-///   * `ssh-env` - Enable SSH environment variable compatibility. Automatically
-///     converts TERM from `xterm-ghostty` to `xterm-256color` when connecting to
-///     remote hosts and propagates COLORTERM, TERM_PROGRAM, and TERM_PROGRAM_VERSION.
-///     Whether or not these variables will be accepted by the remote host(s) will
-///     depend on whether or not the variables are allowed in their sshd_config.
+///   * `ssh-env` - Enable SSH environment variable compatibility. Enabled by default.
+///     Uses `xterm-256color` for remote SSH sessions by default and requests forwarding
+///     of COLORTERM, TERM_PROGRAM, and TERM_PROGRAM_VERSION. The remote host's
+///     `sshd_config` controls whether those three variables are accepted.
 ///     (Available since: 1.2.0)
 ///
-///   * `ssh-terminfo` - Enable automatic terminfo installation on remote hosts.
-///     Attempts to install Ghostty's terminfo entry using `infocmp` and `tic` when
-///     connecting to hosts that lack it. Requires `infocmp` to be available locally
-///     and `tic` to be available on remote hosts. Once terminfo is installed on a
-///     remote host, it will be automatically "cached" to avoid repeat installations.
+///   * `ssh-terminfo` - Enable automatic terminfo installation on remote hosts. Disabled by default.
+///     Attempts to install Ghostty's terminfo entry when connecting to hosts that
+///     lack it. This requires `tic` on the remote host. Successful installations
+///     are cached to avoid repeat installations.
 ///     If desired, the `+ssh-cache` CLI action can be used to manage the installation
 ///     cache manually using various arguments.
 ///     (Available since: 1.2.0)
@@ -8671,7 +8669,7 @@ pub const ShellIntegrationFeatures = packed struct {
     cursor: bool = true,
     sudo: bool = false,
     title: bool = true,
-    @"ssh-env": bool = false,
+    @"ssh-env": bool = true,
     @"ssh-terminfo": bool = false,
     path: bool = true,
 };
